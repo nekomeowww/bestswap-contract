@@ -504,7 +504,7 @@ contract RewardsDistributionRecipient {
     }
 }
 
-contract RewardsAcceleration is RewardsDistributionRecipient {
+contract StakingRewardsAcceleration is RewardsDistributionRecipient {
     address public accSetter;
     mapping(address => uint16) private _acc;
 
@@ -531,7 +531,7 @@ interface IBNB {
     function withdraw(uint) external;
 }
 
-contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, ReentrancyGuard, RewardsAcceleration {
+contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, ReentrancyGuard, StakingRewardsAcceleration {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -612,19 +612,18 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
 
     function stake() external payable nonReentrant updateReward(msg.sender) {
         require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
-        _stake(msg.value);
+        require(msg.value > 0, "Cannot stake 0");
+        _totalSupply = _totalSupply.add(msg.value);
+        _balances[msg.sender] = _balances[msg.sender].add(msg.value);
         emit Staked(msg.sender, msg.value);
     }
     function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
         require(address(stakingToken) != address(0), "Use stake() to stake BNB");
-        _stake(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
-    }
-    function _stake(uint256 amount) internal {
         require(amount > 0, "Cannot stake 0");
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        emit Staked(msg.sender, amount);
     }
 
     function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
