@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.5.17;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP. Does not include
@@ -504,7 +504,34 @@ contract RewardsDistributionRecipient {
     }
 }
 
-contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, ReentrancyGuard {
+contract RewardsAcceleration is RewardsDistributionRecipient {
+    address public accSetter;
+    mapping(address => uint16) private _acc;
+
+    function accOf(address account) public view returns (uint16) {
+        return _acc[account];
+    }
+
+    function setAcc(address account, uint16 acc) external {
+        require(msg.sender == accSetter, "Caller is not AccSetter");
+        _acc[account] = acc;
+
+        emit AccelerationUpdated(account, acc);
+    }
+    function setAccSetter(address setter) external onlyRewardsDistribution {
+        accSetter = setter;
+    }
+
+    event AccelerationUpdated(address indexed user, uint256 amount);
+}
+
+interface IBNB {
+    function deposit() external payable;
+    function transfer(address to, uint value) external returns (bool);
+    function withdraw(uint) external;
+}
+
+contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, ReentrancyGuard, RewardsAcceleration {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -524,8 +551,6 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
-
-    mapping(address => uint16) private _acc;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -549,10 +574,6 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
         return _balances[account];
     }
 
-    function accOf(address account) external view returns (uint16) {
-        return _acc[account];
-    }
-
     function lastTimeRewardApplicable() public view returns (uint256) {
         return Math.min(block.timestamp, periodFinish);
     }
@@ -568,7 +589,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
     }
 
     function earned(address account) public view returns (uint256) {
-        return _balances[account].mul(1000 + _acc[account]).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e21).add(rewards[account]);
+        return _balances[account].mul(1000 + accOf(account)).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e21).add(rewards[account]);
     }
 
     function getRewardForDuration() external view returns (uint256) {
@@ -589,10 +610,15 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
         emit Staked(msg.sender, amount);
     }
 
-    function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
-        stakeInternal(amount);
+    function stake() external payable nonReentrant updateReward(msg.sender) {
+        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
+        require(msg.value > 0, "Cannot stake 0");
+        _totalSupply = _totalSupply.add(msg.value);
+        _balances[msg.sender] = _balances[msg.sender].add(msg.value);
+        emit Staked(msg.sender, msg.value);
     }
-    function stakeInternal(uint256 amount) internal updateReward(msg.sender) {
+    function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
+        require(address(stakingToken) != address(0), "Use stake() to stake BNB");
         require(amount > 0, "Cannot stake 0");
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
@@ -604,7 +630,11 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
         require(amount > 0, "Cannot withdraw 0");
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        stakingToken.safeTransfer(msg.sender, amount);
+        if (address(stakingToken) != address(0)) {
+            stakingToken.safeTransfer(msg.sender, amount);
+        } else {
+            msg.sender.transfer(amount);
+        }
         emit Withdrawn(msg.sender, amount);
     }
 
@@ -649,10 +679,6 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
         emit RewardAdded(reward);
     }
 
-    function setAcc(address account, uint16 acc) external onlyRewardsDistribution {
-        _acc[account] = acc;
-    }
-
     /* ========== MODIFIERS ========== */
 
     modifier updateReward(address account) {
@@ -663,7 +689,7 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
         uint256 _periodStart = periodStart;
         uint256 lastWeek = (previousUpdateTime - _periodStart) / 7 days;
         uint256 currentWeek = (newUpdateTime - _periodStart) / 7 days;
-        if (lastWeek != currentWeek) {
+        if (lastWeek < currentWeek) {
             rewardRate = rewardRate / 2;
         }
 
@@ -681,35 +707,6 @@ contract StakingRewards is IStakingRewards, RewardsDistributionRecipient, Reentr
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
-}
-
-interface IBNB {
-    function deposit() external payable;
-    function transfer(address to, uint value) external returns (bool);
-    function withdraw(uint) external;
-}
-
-contract StakingBNBRewards is StakingRewards {
-    IBNB public WBNB;
-
-    constructor(
-        address _rewardsDistribution,
-        address _rewardsToken,
-        address _wbnb
-    ) StakingRewards(_rewardsDistribution, _rewardsToken, _wbnb) public {
-        WBNB = IBNB(_wbnb);
-    }
-
-    function stake() external payable nonReentrant updateReward(msg.sender) {
-        WBNB.deposit.value(msg.value)();
-        stakingToken.approve(address(this), msg.value);
-        super.stakeInternal(msg.value);
-    }
-    function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
-        super.withdraw(amount);
-        WBNB.withdraw(amount);
-        msg.sender.transfer(amount);
-    }
 }
 
 interface IUniswapV2ERC20 {
