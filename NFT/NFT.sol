@@ -2,34 +2,26 @@
 
 pragma solidity ^0.6.0;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721Burnable.sol";
 
-contract NFT is Ownable, ERC721, ERC721Burnable {
-    mapping (address => bool) public minters;
+import "./MinerManager.sol";
 
+contract NFT is MinerManager, ERC721, ERC721Burnable {
     mapping(uint256 => uint256) private _quailities;
 
     constructor(
         string memory name,
         string memory symbol
-    ) public Ownable() ERC721(name, symbol) {
-    }
+    ) public MinerManager() ERC721(name, symbol) {}
 
-    function addMinter(address _minter) public onlyOwner {
-        minters[_minter] = true;
-    }
-    function removeMinter(address _minter) public onlyOwner {
-        minters[_minter] = false;
-    }
-
-    function mint(address account, uint256 quality) external {
-        require(minters[msg.sender], "Error: only minter");
-
+    function mint(address account, uint256 quality) external onlyMiner {
         uint256 tokenId = totalSupply() + 1;
         _mint(account, tokenId);
-        setQuality(tokenId, quality);
+
+        if (quality != 0) {
+            setQuality(tokenId, quality);
+        }
     }
     function burn(uint256 tokenId) public override {
         super.burn(tokenId);
@@ -39,8 +31,8 @@ contract NFT is Ownable, ERC721, ERC721Burnable {
     function qualityOf(uint256 tokenId) external view returns (uint256) {
         return _quailities[tokenId];
     }
-    function setQuality(uint256 tokenId, uint256 quality) public {
-        require(minters[msg.sender], "Error: only minter");
+    function setQuality(uint256 tokenId, uint256 quality) public onlyMiner {
+        require(_quailities[tokenId] != quality, "Error: same quality");
         _quailities[tokenId] = quality;
 
         emit QualityUpdated(tokenId, quality);
