@@ -21,8 +21,9 @@ contract BlindBox is Ownable, ERC721, ERC721Burnable {
         _mint(account, tokenId);
     }
     function open(uint256 tokenId) public override {
+        require(ownerOf(tokenId) == msg.sender, "ERC721: permission deny");
         super.burn(tokenId);
         uint quality = uint(keccak256(block.timestamp + block.difficulty)) % 10;
-        target.mint(address(this), quality);
+        target.mint(msg.sender, quality);
     }
 }
