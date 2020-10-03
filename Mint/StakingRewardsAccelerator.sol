@@ -33,7 +33,7 @@ contract StakingRewardsAccelerator is ReentrancyGuard {
 
         emit Staked(msg.sender, tokenId);
     }
-    function withdarw() external nonReentrant {
+    function withdraw() external nonReentrant {
         uint256 tokenId = _staked[msg.sender];
         require(tokenId != 0, "Error: not staked");
 
