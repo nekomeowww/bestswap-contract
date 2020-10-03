@@ -32,6 +32,11 @@ contract NFT is Ownable, ERC721, ERC721Burnable {
         setQuality(tokenId, quality);
     }
 
+    function burn(uint256 tokenId) public override {
+        super.burn(tokenId);
+        delete _quailities[tokenId];
+    }
+
     function qualityOf(uint256 tokenId) external view returns (uint256) {
         return _quailities[tokenId];
     }
