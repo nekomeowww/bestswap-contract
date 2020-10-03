@@ -13,16 +13,21 @@ contract BlindBox is MinerManager, ERC721 {
 
     NFT public target;
 
+    uint256 private _nextTokenId;
+
     constructor(
         string memory name,
         string memory symbol,
         address _target
     ) public MinerManager() ERC721(name, symbol) {
         target = NFT(_target);
+        _nextTokenId = 1;
     }
 
     function mint(address account) external onlyMiner {
-        _mint(account, totalSupply() + 1);
+        uint256 tokenId = _nextTokenId;
+        _mint(account, tokenId);
+        _nextTokenId = tokenId + 1;
     }
     function burn(uint256 tokenId) external onlyMiner {
         _burn(tokenId);

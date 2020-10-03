@@ -10,14 +10,19 @@ import "./MinerManager.sol";
 contract NFT is MinerManager, ERC721, ERC721Burnable {
     mapping(uint256 => uint256) private _quailities;
 
+    uint256 private _nextTokenId;
+
     constructor(
         string memory name,
         string memory symbol
-    ) public MinerManager() ERC721(name, symbol) {}
+    ) public MinerManager() ERC721(name, symbol) {
+        _nextTokenId = 1;
+    }
 
     function mint(address account, uint256 quality) external onlyMiner {
-        uint256 tokenId = totalSupply() + 1;
+        uint256 tokenId = _nextTokenId;
         _mint(account, tokenId);
+        _nextTokenId = tokenId + 1;
 
         if (quality != 0) {
             setQuality(tokenId, quality);
