@@ -25,13 +25,12 @@ contract NFT is Ownable, ERC721, ERC721Burnable {
     }
 
     function mint(address account, uint256 quality) external {
-        require(minters[msg.sender], "Error: only minter allowed");
+        require(minters[msg.sender], "Error: only minter");
 
         uint256 tokenId = totalSupply() + 1;
         _mint(account, tokenId);
         setQuality(tokenId, quality);
     }
-
     function burn(uint256 tokenId) public override {
         super.burn(tokenId);
         delete _quailities[tokenId];
@@ -41,7 +40,11 @@ contract NFT is Ownable, ERC721, ERC721Burnable {
         return _quailities[tokenId];
     }
     function setQuality(uint256 tokenId, uint256 quality) public {
-        require(minters[msg.sender], "Error: only minter allowed");
+        require(minters[msg.sender], "Error: only minter");
         _quailities[tokenId] = quality;
+
+        emit QualityUpdated(tokenId, quality);
     }
+
+    event QualityUpdated(uint256 tokenId, uint256 quality);
 }
