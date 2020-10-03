@@ -12,9 +12,7 @@ import "./NFT.sol";
 contract BlindBox is MinerManager, ERC721 {
 
     NFT public target;
-
-    uint256 private _nextTokenId;
-
+    
     constructor(
         string memory name,
         string memory symbol,
@@ -25,9 +23,11 @@ contract BlindBox is MinerManager, ERC721 {
     }
 
     function mint(address account) external onlyMiner {
-        uint256 tokenId = _nextTokenId;
-        _mint(account, tokenId);
-        _nextTokenId = tokenId + 1;
+        if (_holderTokens[address(0)].length() != 0) {
+            _transfer(address(0), account, _holderTokens[address(0)][0]);
+        } else {
+            _mint(account, totalSupply() + 1);
+        }
     }
     function burn(uint256 tokenId) external onlyMiner {
         _burn(tokenId);
@@ -35,11 +35,9 @@ contract BlindBox is MinerManager, ERC721 {
 
     function open(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "ERC721: permission deny");
-        _burn(tokenId);
-
+        _transfer(msg.sender, address(0), tokenId);
         uint256 quality = uint256(keccak256(abi.encode(block.timestamp + block.difficulty))) % 10;
         target.mint(msg.sender, quality);
-
         emit Opened(tokenId, quality);
     }
 
