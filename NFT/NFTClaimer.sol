@@ -16,6 +16,7 @@ contract NFTClaimer is Ownable {
     }
 
     function claim() external {
-        token.mint(msg.sender, 0);
+        uint256 quality = uint256(keccak256(abi.encode(block.timestamp + block.difficulty))) % 10;
+        token.mint(msg.sender, quality);
     }
 }

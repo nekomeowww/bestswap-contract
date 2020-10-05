@@ -31,8 +31,10 @@ contract StakingRewardsAccelerator is ReentrancyGuard {
             _withdraw(stakedTokenId);
         }
 
+        uint256 quality = NFT.qualityOf(tokenId);
+
         _staked[msg.sender] = tokenId;
-        rewardsAcceleration.setAcc(msg.sender, 2);
+        rewardsAcceleration.setAcc(msg.sender, quality);
         NFT.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit Staked(msg.sender, tokenId);
