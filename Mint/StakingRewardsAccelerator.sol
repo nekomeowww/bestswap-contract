@@ -45,6 +45,7 @@ contract StakingRewardsAccelerator is ReentrancyGuard, IERC721Receiver {
         uint256 tokenId = _staked[msg.sender];
         require(tokenId != 0, "Error: not staked");
 
+        _staked[msg.sender] = 0;
         rewardsAcceleration.setAcc(msg.sender, 0);
         _withdraw(tokenId);
     }
