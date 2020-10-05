@@ -6,18 +6,19 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
 
 import "./StakingRewardsAcceleration.sol";
+import "../NFT.sol";
 
 contract StakingRewardsAccelerator is ReentrancyGuard {
-    IERC721 public NFT;
+    NFT public stakingToken;
     IStakingRewardsAcceleration public rewardsAcceleration;
 
     mapping(address => uint256) private _staked;
 
     constructor(
-        address _NFT,
+        address _stakingToken,
         address _rewardsAcceleration
     ) public {
-        NFT = IERC721(_NFT);
+        stakingToken = NFT(_stakingToken);
         rewardsAcceleration = IStakingRewardsAcceleration(_rewardsAcceleration);
     }
 
@@ -31,11 +32,11 @@ contract StakingRewardsAccelerator is ReentrancyGuard {
             _withdraw(stakedTokenId);
         }
 
-        uint256 quality = NFT.qualityOf(tokenId);
+        uint16 quality = uint16(stakingToken.qualityOf(tokenId));
 
         _staked[msg.sender] = tokenId;
         rewardsAcceleration.setAcc(msg.sender, quality);
-        NFT.safeTransferFrom(msg.sender, address(this), tokenId);
+        stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         emit Staked(msg.sender, tokenId);
     }
@@ -47,7 +48,7 @@ contract StakingRewardsAccelerator is ReentrancyGuard {
         _withdraw(tokenId);
     }
     function _withdraw(uint256 tokenId) internal {
-        NFT.safeTransferFrom(address(this), msg.sender, tokenId);
+        stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
         emit Withdrawn(msg.sender, tokenId);
     }
 
