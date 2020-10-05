@@ -7,11 +7,9 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 import "./NFT.sol";
 
 contract HotPotato is Ownable  {
-  mapping (address => bool) private admins;
-  
   struct Order {
-    address creator;    
-    address owner;
+    address payable creator;    
+    address payable owner;
     address issuer;    
     uint256 tokenId;    
     uint256 price;
@@ -22,8 +20,6 @@ contract HotPotato is Ownable  {
   uint256 private orderBookSize;
 
   function DecentralizedExchangeHotPotato() public {
-    owner = msg.sender;
-    admins[owner] = true;    
   }
 
   /* Withdraw */
@@ -36,9 +32,6 @@ contract HotPotato is Ownable  {
   }
 
   /* Read */
-  function isAdmin(address _admin) public view returns (bool _isAdmin) {
-    return admins[_admin];
-  }
   function totalOrder() public view returns (uint256 _totalOrder) {
     return orderBookSize;
   }  
