@@ -21,6 +21,10 @@ contract StakingRewardsAccelerator is ReentrancyGuard {
         rewardsAcceleration = IStakingRewardsAcceleration(_rewardsAcceleration);
     }
 
+    function getStaked(address account) external view returns (uint256) {
+        return _staked[account];
+    }
+
     function stake(uint256 tokenId) external nonReentrant {
         uint256 stakedTokenId = _staked[msg.sender];
         if (stakedTokenId != 0) {
