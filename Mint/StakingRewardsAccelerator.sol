@@ -4,11 +4,12 @@ pragma solidity ^0.6;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/ReentrancyGuard.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "./StakingRewardsAcceleration.sol";
 import "../NFT.sol";
 
-contract StakingRewardsAccelerator is ReentrancyGuard {
+contract StakingRewardsAccelerator is ReentrancyGuard, IERC721Receiver {
     NFT public stakingToken;
     IStakingRewardsAcceleration public rewardsAcceleration;
 
@@ -50,6 +51,10 @@ contract StakingRewardsAccelerator is ReentrancyGuard {
     function _withdraw(uint256 tokenId) internal {
         stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
         emit Withdrawn(msg.sender, tokenId);
+    }
+
+    function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     event Staked(address indexed user, uint256 tokenId);
