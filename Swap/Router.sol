@@ -14,14 +14,20 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     address public immutable override factory;
     address public immutable override WETH;
 
+    address public foundationFeeTo;
+    address public foundationFeeToSetter;
+
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
         _;
     }
 
-    constructor(address _factory, address _WETH) public {
+    constructor(address _factory, address _WETH, address _foundationFeeTo, address _foundationFeeToSetter) public {
         factory = _factory;
         WETH = _WETH;
+
+        foundationFeeTo = _foundationFeeTo;
+        foundationFeeToSetter = _foundationFeeToSetter;
     }
 
     receive() external payable {
@@ -441,5 +447,17 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         returns (uint[] memory amounts)
     {
         return UniswapV2Library.getAmountsIn(factory, amountOut, path);
+    }
+
+    // Foundation Fee
+
+    function setFoundationFeeTo(address _feeTo) external {
+        require(msg.sender == foundationFeeToSetter, 'Bestswap: FORBIDDEN');
+        foundationFeeTo = _feeTo;
+    }
+
+    function setFoundationFeeToSetter(address _feeToSetter) external {
+        require(msg.sender == foundationFeeToSetter, 'Bestswap: FORBIDDEN');
+        foundationFeeToSetter = _feeToSetter;
     }
 }
