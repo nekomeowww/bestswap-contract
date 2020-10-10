@@ -5,8 +5,14 @@ import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/Uniswap
 import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/libraries/Math.sol';
 import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/libraries/UQ112x112.sol';
 import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/interfaces/IERC20.sol';
-import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/interfaces/IUniswapV2Factory.sol';
 import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/interfaces/IUniswapV2Callee.sol';
+
+import './IUniswapV2Factory.sol';
+
+interface IMigrator {
+    // Return the desired amount of liquidity token that the migrator wants.
+    function desiredLiquidity() external view returns (uint256);
+}
 
 contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     using SafeMath  for uint;
@@ -117,8 +123,15 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         if (_totalSupply == 0) {
-            liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
-           _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
+           address migrator = IUniswapV2Factory(factory).migrator();
+            if (msg.sender == migrator) {
+                liquidity = IMigrator(migrator).desiredLiquidity();
+                require(liquidity > 0 && liquidity != uint256(-1), "Bad desired liquidity");
+            } else {
+                require(migrator == address(0), "Must not have migrator");
+                liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
+                _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
+            }
         } else {
             liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
         }

@@ -1,12 +1,12 @@
 pragma solidity =0.5.16;
 
-import 'https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/interfaces/IUniswapV2Factory.sol';
-
+import './IUniswapV2Factory.sol';
 import './LPToken.sol';
 
 contract UniswapV2Factory is IUniswapV2Factory {
     address public feeTo;
     address public feeToSetter;
+    address public migrator;
 
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
@@ -19,6 +19,10 @@ contract UniswapV2Factory is IUniswapV2Factory {
 
     function allPairsLength() external view returns (uint) {
         return allPairs.length;
+    }
+
+    function pairCodeHash() external pure returns (bytes32) {
+        return keccak256(type(UniswapV2Pair).creationCode);
     }
 
     function createPair(address tokenA, address tokenB) external returns (address pair) {
@@ -41,6 +45,11 @@ contract UniswapV2Factory is IUniswapV2Factory {
     function setFeeTo(address _feeTo) external {
         require(msg.sender == feeToSetter, 'UniswapV2: FORBIDDEN');
         feeTo = _feeTo;
+    }
+
+    function setMigrator(address _migrator) external override {
+        require(msg.sender == feeToSetter, 'UniswapV2: FORBIDDEN');
+        migrator = _migrator;
     }
 
     function setFeeToSetter(address _feeToSetter) external {
