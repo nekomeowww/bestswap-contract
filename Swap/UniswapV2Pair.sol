@@ -31,7 +31,7 @@ contract UniswapV2Pair is UniswapV2ERC20 {
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
-    uint8 public fee;
+    uint8 public fee = 3;
 
     uint private unlocked = 1;
     modifier lock() {
@@ -64,9 +64,8 @@ contract UniswapV2Pair is UniswapV2ERC20 {
     );
     event Sync(uint112 reserve0, uint112 reserve1);
 
-    constructor(uint8 _fee) public {
+    constructor() public {
         factory = msg.sender;
-        fee = _fee;
     }
 
     // called once by the factory at time of deployment
