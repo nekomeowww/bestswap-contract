@@ -31,6 +31,7 @@ contract UniswapV2Pair is UniswapV2ERC20 {
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
+    uint8 public fee;
 
     uint private unlocked = 1;
     modifier lock() {
@@ -63,8 +64,9 @@ contract UniswapV2Pair is UniswapV2ERC20 {
     );
     event Sync(uint112 reserve0, uint112 reserve1);
 
-    constructor() public {
+    constructor(uint8 _fee) public {
         factory = msg.sender;
+        fee = _fee;
     }
 
     // called once by the factory at time of deployment
@@ -101,7 +103,7 @@ contract UniswapV2Pair is UniswapV2ERC20 {
                 uint rootKLast = Math.sqrt(_kLast);
                 if (rootK > rootKLast) {
                     uint numerator = totalSupply.mul(rootK.sub(rootKLast));
-                    uint denominator = rootK.mul(20).add(rootKLast);
+                    uint denominator = rootK.mul(5).add(rootKLast);
                     uint liquidity = numerator / denominator;
                     if (liquidity > 0) _mint(feeTo, liquidity);
                 }
@@ -189,8 +191,8 @@ contract UniswapV2Pair is UniswapV2ERC20 {
         uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
         require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(5));
-        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(5));
+        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(fee));
+        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(fee));
         require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
         }
 
@@ -209,5 +211,11 @@ contract UniswapV2Pair is UniswapV2ERC20 {
     // force reserves to match balances
     function sync() external lock {
         _update(IERC20Uniswap(token0).balanceOf(address(this)), IERC20Uniswap(token1).balanceOf(address(this)), reserve0, reserve1);
+    }
+
+    function setFee(uint8 _fee) external {
+        address feeToSetter = IUniswapV2Factory(factory).feeToSetter();
+        require(msg.sender == feeToSetter, 'UniswapV2: FORBIDDEN');
+        fee = _fee;
     }
 }
