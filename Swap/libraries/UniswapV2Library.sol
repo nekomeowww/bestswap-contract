@@ -30,7 +30,7 @@ library UniswapV2Library {
         (address token0,) = sortTokens(tokenA, tokenB);
         (uint reserve0, uint reserve1,) = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
-        uint8 fee = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).fee();        
+        fee = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).fee();        
     }
 
     // given some amount of an asset and pair reserves, returns an equivalent amount of the other asset
