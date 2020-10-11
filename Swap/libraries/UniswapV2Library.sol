@@ -21,7 +21,7 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'e18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303' // init code hash
+                hex'38f57775cf716f060dddf754142982019a17cff4b57de94a6e3ecd6bd405225d' // init code hash
             ))));
     }
 
@@ -30,7 +30,7 @@ library UniswapV2Library {
         (address token0,) = sortTokens(tokenA, tokenB);
         (uint reserve0, uint reserve1,) = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
-        fee = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).fee();        
+        fee = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).fee();
     }
 
     // given some amount of an asset and pair reserves, returns an equivalent amount of the other asset
@@ -44,7 +44,7 @@ library UniswapV2Library {
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut, uint8 fee) internal pure returns (uint amountOut) {
         require(amountIn > 0, 'UniswapV2Library: INSUFFICIENT_INPUT_AMOUNT');
         require(reserveIn > 0 && reserveOut > 0, 'UniswapV2Library: INSUFFICIENT_LIQUIDITY');
-        uint amountInWithFee = amountIn.mul(1000-fee);        
+        uint amountInWithFee = amountIn.mul(1000-fee);
         uint numerator = amountInWithFee.mul(reserveOut);
         uint denominator = reserveIn.mul(1000).add(amountInWithFee);
         amountOut = numerator / denominator;
