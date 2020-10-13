@@ -1,16 +1,17 @@
 <h1 align="center">bestswap-contract</h1>
 
-## Install Dependencies
+## Project Setup
+### Install Dependencies
 ```bash
 yarn
 ```
 
-## Compile Contracts
+### Compile Contracts
 ```bash
 yarn build
 ```
 
-## Flatten Contracts
+### Flatten Contracts
 ```bash
 yarn flatten
 ```
