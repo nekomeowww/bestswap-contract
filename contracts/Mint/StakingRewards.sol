@@ -17,7 +17,8 @@ pragma solidity >=0.5.0;
 
 interface IRef {
     function set_referrer(address a, address b) external;
-    function add_score(uint d) external;
+    function add_score(address a, uint d) external;
+    function add_subordinate(address a, address r) external;
 }
 
 contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration {
@@ -46,10 +47,12 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
 
     constructor(
         address _rewardsToken,
-        address _stakingToken
+        address _stakingToken,
+        address _irefAddress
     ) public Ownable() {
         rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
+        ref = IRef(_irefAddress);
     }
 
     /* ========== VIEWS ========== */
@@ -105,9 +108,9 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         emit Staked(msg.sender, amount);
     }    
 
-    function stake() public {
+    function stake() public payable {
         require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
-        _stake(amount);
+        _stake(msg.value);
     }
     function stake(uint256 amount) public {
         require(address(stakingToken) != address(0), "Use stake() to stake BNB");
@@ -115,14 +118,17 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         _stake(amount);
     }
     function stakeWithRef(address r) external payable nonReentrant updateReward(msg.sender) {
-        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");         
-        _stake(amount);
-        ref.set_referrer(r);
+        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
+        _stake(msg.value);
+        ref.set_referrer(msg.sender, r);
+        ref.add_subordinate(msg.sender, r);
     }
     function stakeWithRef(uint256 amount, address r) external {
         _stake(amount);
-        ref.set_referrer(r);        
-    }    
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        ref.set_referrer(msg.sender, r);
+        ref.add_subordinate(msg.sender, r);
+    }
 
 
     function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
@@ -142,7 +148,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         if (reward > 0) {
             rewards[msg.sender] = 0;
             rewardsToken.safeTransfer(msg.sender, reward);
-            ref.add_score(reward);
+            ref.add_score(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
         }
     }
