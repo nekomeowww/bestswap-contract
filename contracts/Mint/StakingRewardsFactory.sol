@@ -415,7 +415,7 @@ import "./StakingRewardsAcceleration.sol";
 // Inheritance
 
 interface IRef {
-    function set_admin(address a) onlyAdmin() external;
+    function set_admin(address a) external;
     function set_referrer(address a, address b) external;
     function add_score(address a, uint d) external;
     function add_subordinate(address a, address r) external;
@@ -617,7 +617,9 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
 
 contract StakingRewardsFactory is Ownable {
     // immutables
+    IRef public ref;
     address public rewardsToken;
+    address public irefAddress;
     uint public stakingRewardsGenesis;
 
     // the staking tokens for which the rewards contract has been deployed
@@ -638,6 +640,7 @@ contract StakingRewardsFactory is Ownable {
     ) Ownable() public {
         rewardsToken = _rewardsToken;
         ref = IRef(_irefAddress);
+        irefAddress = _irefAddress;
     }
 
     ///// permissioned functions
@@ -648,11 +651,11 @@ contract StakingRewardsFactory is Ownable {
         StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
         require(info.stakingRewards == address(0), 'StakingRewardsFactory::deploy: already deployed');
 
-        info.stakingRewards = address(new StakingRewards(address(this), rewardsToken, stakingToken, _irefAddress));
-        rel.set_admin(info.stakingRewards);
+        info.stakingRewards = address(new StakingRewards(rewardsToken, stakingToken, irefAddress));
+        ref.set_admin(info.stakingRewards);
         info.rewardAmount = rewardAmount;
         stakingTokens.push(stakingToken);
-        emit Deployed(info.stakingRewards)
+        emit Deployed(info.stakingRewards);
     }
 
     ///// permissionless functions
