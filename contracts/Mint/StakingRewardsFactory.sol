@@ -634,13 +634,9 @@ contract StakingRewardsFactory is Ownable {
 
     constructor(
         address _rewardsToken,
-        uint _stakingRewardsGenesis，
         address _irefAddress
     ) Ownable() public {
-        require(_stakingRewardsGenesis >= block.timestamp, 'StakingRewardsFactory::constructor: genesis too soon');
-
         rewardsToken = _rewardsToken;
-        stakingRewardsGenesis = _stakingRewardsGenesis;
         ref = IRef(_irefAddress);
     }
 
@@ -672,8 +668,6 @@ contract StakingRewardsFactory is Ownable {
     // notify reward amount for an individual staking token.
     // this is a fallback in case the notifyRewardAmounts costs too much gas to call for all contracts
     function notifyRewardAmount(address stakingToken) public {
-        require(block.timestamp >= stakingRewardsGenesis, 'StakingRewardsFactory::notifyRewardAmount: not ready');
-
         StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
         require(info.stakingRewards != address(0), 'StakingRewardsFactory::notifyRewardAmount: not deployed');
 
