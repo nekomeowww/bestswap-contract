@@ -13,6 +13,13 @@ import "./IUniswapV2ERC20.sol";
 
 import "./StakingRewardsAcceleration.sol";
 
+pragma solidity >=0.5.0;
+
+interface IRef {
+    function set_referrer(address a, address b) external;
+    function add_score(uint d) external;
+}
+
 contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -21,6 +28,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
+    IRef public ref;
     uint256 public periodStart = 0;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -90,21 +98,32 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         emit Staked(msg.sender, amount);
     }
 
-    function stake() external payable nonReentrant updateReward(msg.sender) {
-        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
-        require(msg.value > 0, "Cannot stake 0");
-        _totalSupply = _totalSupply.add(msg.value);
-        _balances[msg.sender] = _balances[msg.sender].add(msg.value);
-        emit Staked(msg.sender, msg.value);
-    }
-    function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
-        require(address(stakingToken) != address(0), "Use stake() to stake BNB");
+    function _stake(uint256 amount) internal nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Cannot stake 0");
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         emit Staked(msg.sender, amount);
+    }    
+
+    function stake() public {
+        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
+        _stake(amount);
     }
+    function stake(uint256 amount) public {
+        require(address(stakingToken) != address(0), "Use stake() to stake BNB");
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        _stake(amount);
+    }
+    function stakeWithRef(address r) external payable nonReentrant updateReward(msg.sender) {
+        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");         
+        _stake(amount);
+        ref.set_referrer(r);
+    }
+    function stakeWithRef(uint256 amount, address r) external {
+        _stake(amount);
+        ref.set_referrer(r);        
+    }    
+
 
     function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Cannot withdraw 0");
@@ -123,6 +142,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         if (reward > 0) {
             rewards[msg.sender] = 0;
             rewardsToken.safeTransfer(msg.sender, reward);
+            ref.add_score(reward);
             emit RewardPaid(msg.sender, reward);
         }
     }
