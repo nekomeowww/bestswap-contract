@@ -4,10 +4,10 @@ pragma solidity ^0.6;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "./StakingRewardsAcceleration.sol";
-import "../NFT.sol";
+import "../NFT/NFT.sol";
 
 contract StakingRewardsAccelerator is ReentrancyGuard, IERC721Receiver {
     NFT public stakingToken;
