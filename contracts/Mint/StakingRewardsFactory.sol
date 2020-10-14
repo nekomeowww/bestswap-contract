@@ -415,6 +415,7 @@ import "./StakingRewardsAcceleration.sol";
 // Inheritance
 
 interface IRef {
+    function set_admin(address a) onlyAdmin() external;
     function set_referrer(address a, address b) external;
     function add_score(address a, uint d) external;
     function add_subordinate(address a, address r) external;
@@ -633,12 +634,14 @@ contract StakingRewardsFactory is Ownable {
 
     constructor(
         address _rewardsToken,
-        uint _stakingRewardsGenesis
+        uint _stakingRewardsGenesis，
+        address _irefAddress
     ) Ownable() public {
         require(_stakingRewardsGenesis >= block.timestamp, 'StakingRewardsFactory::constructor: genesis too soon');
 
         rewardsToken = _rewardsToken;
         stakingRewardsGenesis = _stakingRewardsGenesis;
+        ref = IRef(_irefAddress);
     }
 
     ///// permissioned functions
@@ -649,9 +652,11 @@ contract StakingRewardsFactory is Ownable {
         StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
         require(info.stakingRewards == address(0), 'StakingRewardsFactory::deploy: already deployed');
 
-        info.stakingRewards = address(new StakingRewards(/*_rewardsDistribution=*/ address(this), rewardsToken, stakingToken));
+        info.stakingRewards = address(new StakingRewards(address(this), rewardsToken, stakingToken, _irefAddress));
+        rel.set_admin(info.stakingRewards);
         info.rewardAmount = rewardAmount;
         stakingTokens.push(stakingToken);
+        emit Deployed(info.stakingRewards)
     }
 
     ///// permissionless functions
@@ -683,4 +688,6 @@ contract StakingRewardsFactory is Ownable {
             StakingRewards(info.stakingRewards).notifyRewardAmount(rewardAmount);
         }
     }
+
+    event Deployed(address poolAddress);
 }
