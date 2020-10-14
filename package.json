@@ -12,6 +12,6 @@
   "license": "MIT",
   "scripts": {
     "build": "waffle",
-    "faltten": "npx waffle flatten"
+    "flatten": "npx waffle flatten"
   }
 }
