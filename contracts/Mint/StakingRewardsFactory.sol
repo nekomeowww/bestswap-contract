@@ -635,10 +635,8 @@ contract StakingRewardsFactory is Ownable {
     mapping(address => StakingRewardsInfo) public stakingRewardsInfoByStakingToken;
 
     constructor(
-        address _rewardsToken,
         address _irefAddress
     ) Ownable() public {
-        rewardsToken = _rewardsToken;
         ref = IRef(_irefAddress);
         irefAddress = _irefAddress;
     }
@@ -653,6 +651,7 @@ contract StakingRewardsFactory is Ownable {
 
         info.stakingRewards = address(new StakingRewards(rewardToken, stakingToken, irefAddress));
         ref.set_admin(info.stakingRewards);
+        rewardsToken = rewardToken;
         info.rewardAmount = rewardAmount;
         stakingTokens.push(stakingToken);
         emit Deployed(info.stakingRewards);
