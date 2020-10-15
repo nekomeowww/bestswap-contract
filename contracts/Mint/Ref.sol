@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: None
 pragma solidity ^0.6;
+pragma experimental ABIEncoderV2;
 
 contract Ref {
 
@@ -15,16 +16,13 @@ contract Ref {
     constructor() public  {
         admin[msg.sender] = true;        
     }
-
     function set_admin(address a) onlyAdmin() external {
         admin[a] = true;
     }
-
-    function set_referrer(address a, address b) onlyAdmin() external {
-        referrer[a] = b;
-    }
-    
-    function add_score(address a, uint d) onlyAdmin() external {
-        score[a] += d;
+    function set_referrer(address r) onlyAdmin() external {
+        referrer[tx.origin] = r;
+    }    
+    function add_score(uint d) onlyAdmin() external {
+        score[referrer[tx.origin]] += d;
     }
 }

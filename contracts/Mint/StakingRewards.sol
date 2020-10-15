@@ -16,7 +16,7 @@ import "./StakingRewardsAcceleration.sol";
 pragma solidity >=0.5.0;
 
 interface IRef {
-    function set_referrer(address a, address b) external;
+    function set_referrer(address r) external;
     function add_score(address a, uint d) external;
 }
 
@@ -119,12 +119,12 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
     function stakeWithRef(address r) external payable nonReentrant updateReward(msg.sender) {
         require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
         _stake(msg.value);
-        ref.set_referrer(msg.sender, r);
+        ref.set_referrer(r);
     }
     function stakeWithRef(uint256 amount, address r) external {
         _stake(amount);
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        ref.set_referrer(msg.sender, r);
+        ref.set_referrer(r);
     }
 
 
