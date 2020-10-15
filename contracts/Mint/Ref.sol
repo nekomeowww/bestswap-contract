@@ -27,5 +27,5 @@ contract Ref {
         score[referrer[tx.origin]] += d;
     }
 
-    event ReferrerSet(address indexed origin, address, referrer);
+    event ReferrerSet(address indexed origin, address indexed referrer);
 }

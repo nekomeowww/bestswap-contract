@@ -16,6 +16,7 @@ import "./StakingRewardsAcceleration.sol";
 pragma solidity >=0.5.0;
 
 interface IRef {
+    function set_admin(address a) external;
     function set_referrer(address r) external;
     function add_score(address a, uint d) external;
 }
