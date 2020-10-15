@@ -418,7 +418,6 @@ interface IRef {
     function set_admin(address a) external;
     function set_referrer(address a, address b) external;
     function add_score(address a, uint d) external;
-    function add_subordinate(address a, address r) external;
 }
 
 contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration {
@@ -521,13 +520,11 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
         _stake(msg.value);
         ref.set_referrer(msg.sender, r);
-        ref.add_subordinate(msg.sender, r);
     }
     function stakeWithRef(uint256 amount, address r) external {
         _stake(amount);
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         ref.set_referrer(msg.sender, r);
-        ref.add_subordinate(msg.sender, r);
     }
 
 
