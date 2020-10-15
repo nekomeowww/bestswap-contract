@@ -21,8 +21,11 @@ contract Ref {
     }
     function set_referrer(address r) onlyAdmin() external {
         referrer[tx.origin] = r;
+        emit ReferrerSet(tx.origin, r);
     }    
     function add_score(uint d) onlyAdmin() external {
         score[referrer[tx.origin]] += d;
     }
+
+    event ReferrerSet(address indexed origin, address, referrer);
 }
