@@ -116,14 +116,12 @@ contract StakingRewards is ReentrancyGuard, StakingRewardsAcceleration {
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         _stake(amount);
     }
-    function stakeWithRef(address r) external payable nonReentrant updateReward(msg.sender) {
-        require(address(stakingToken) == address(0), "Use stake(amount) to stake non-BNB token");
-        _stake(msg.value);
+    function stakeWithRef(address r) external payable {
+        stake();
         ref.set_referrer(r);
     }
     function stakeWithRef(uint256 amount, address r) external {
-        _stake(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        stake(amount);
         ref.set_referrer(r);
     }
 
