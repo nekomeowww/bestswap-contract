@@ -12,8 +12,11 @@ contract Ref {
         _;
     }
 
-    constructor() public  {
+    constructor() public {
         admin[msg.sender] = true;        
+    }
+    function scoreOf(address a) public view returns (uint) {
+        return score[a];
     }
     function set_admin(address a) onlyAdmin() external {
         admin[a] = true;
