@@ -8,7 +8,7 @@ contract Ref {
     mapping(address => bool) public admin;
 
     modifier onlyAdmin() {
-        require(admin[msg.sender], "You 're not admin");
+        require(admin[msg.sender], "You're not admin");
         _;
     }
 

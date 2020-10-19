@@ -30,10 +30,9 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
     IRef public ref;
-    uint256 public periodStart = 0;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration = 60 days;
+    uint256 public rewardsDuration = 7 days;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 
@@ -158,13 +157,15 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    function notifyRewardAmount(uint256 reward) external onlyOwner updateReward(address(0)) {
+    function notifyRewardAmount(uint256 reward) external updateReward(address(0)) {
         if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(rewardsDuration);
         } else {
+            uint lastRate = rewardRate;
             uint256 remaining = periodFinish.sub(block.timestamp);
             uint256 leftover = remaining.mul(rewardRate);
             rewardRate = reward.add(leftover).div(rewardsDuration);
+            require(rewardRate >= lastRate, "rewardRate >= lastRate");
         }
 
         // Ensure the provided reward amount is not more than the balance in the contract.
@@ -173,10 +174,6 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
         uint balance = rewardsToken.balanceOf(address(this));
         require(rewardRate <= balance.div(rewardsDuration), "Provided reward too high");
-
-        if (periodStart == 0) {
-            periodStart = block.timestamp;
-        }
 
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(rewardsDuration);
@@ -187,17 +184,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
 
     modifier updateReward(address account) {
         rewardPerTokenStored = rewardPerToken();
-
-        uint256 previousUpdateTime = lastUpdateTime;
-        uint256 newUpdateTime = lastTimeRewardApplicable();
-        uint256 _periodStart = periodStart;
-        uint256 lastWeek = (previousUpdateTime - _periodStart) / 7 days;
-        uint256 currentWeek = (newUpdateTime - _periodStart) / 7 days;
-        if (lastWeek < currentWeek) {
-            rewardRate = rewardRate / 2;
-        }
-
-        lastUpdateTime = newUpdateTime;
+        lastUpdateTime = lastTimeRewardApplicable();
         if (account != address(0)) {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;

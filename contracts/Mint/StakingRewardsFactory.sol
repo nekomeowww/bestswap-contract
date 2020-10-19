@@ -6,75 +6,24 @@
 pragma solidity ^0.6;
 import "./StakingRewards.sol";
 
-contract StakingRewardsFactory is Ownable {
-    // immutables
-    IRef public ref;
-    address public rewardsToken;
-    address public irefAddress;
-    uint public stakingRewardsGenesis;
+interface IRef {
+    function set_referrer(address r) external;
+    function add_score(uint d) external;
+    function set_admin(address a) external;
+}
 
-    // the staking tokens for which the rewards contract has been deployed
-    address[] public stakingTokens;
+contract StakingRewardsFactory {
 
-    // info about rewards for a particular staking token
-    struct StakingRewardsInfo {
-        address stakingRewards;
-        uint rewardAmount;
-    }
-
-    // rewards info by staking token
-    mapping(address => StakingRewardsInfo) public stakingRewardsInfoByStakingToken;
-
-    constructor(
-        address _irefAddress
-    ) Ownable() public {
-        ref = IRef(_irefAddress);
-        irefAddress = _irefAddress;
-    }
-
-    ///// permissioned functions
+    address constant ref = address(0x04A90Bc01B23fe1656abE6c3CC1aBC92d4A27324);
+    address constant rewardToken = address(0x36eb1b02cb7be3ffa1ee7bd2a3c7d036002730f7);
 
     // deploy a staking reward contract for the staking token, and store the reward amount
     // the reward will be distributed to the staking reward contract no sooner than the genesis
-    function deploy(address rewardToken, address stakingToken, uint rewardAmount) public onlyOwner {
-        StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
-        require(info.stakingRewards == address(0), 'StakingRewardsFactory::deploy: already deployed');
-
-        info.stakingRewards = address(new StakingRewards(rewardToken, stakingToken, irefAddress));
-        ref.set_admin(info.stakingRewards);
-        rewardsToken = rewardToken;
-        info.rewardAmount = rewardAmount;
-        stakingTokens.push(stakingToken);
-        emit Deployed(info.stakingRewards);
+    function new_pool(address stakingToken, uint amount) {
+        address pool = address(new StakingRewards(rewardToken, stakingToken, ref));
+        ref.set_admin(pool);
+        IERC20 token = IERC20(rewardToken);
+        token.transfer(pool, amount);
+        pool.notifyRewardAmount(amount);
     }
-
-    ///// permissionless functions
-
-    // call notifyRewardAmount for all staking tokens.
-    function notifyRewardAmounts() public {
-        require(stakingTokens.length > 0, 'StakingRewardsFactory::notifyRewardAmounts: called before any deploys');
-        for (uint i = 0; i < stakingTokens.length; i++) {
-            notifyRewardAmount(stakingTokens[i]);
-        }
-    }
-
-    // notify reward amount for an individual staking token.
-    // this is a fallback in case the notifyRewardAmounts costs too much gas to call for all contracts
-    function notifyRewardAmount(address stakingToken) public {
-        StakingRewardsInfo storage info = stakingRewardsInfoByStakingToken[stakingToken];
-        require(info.stakingRewards != address(0), 'StakingRewardsFactory::notifyRewardAmount: not deployed');
-
-        if (info.rewardAmount > 0) {
-            uint rewardAmount = info.rewardAmount;
-            info.rewardAmount = 0;
-
-            require(
-                IERC20(rewardsToken).transfer(info.stakingRewards, rewardAmount),
-                'StakingRewardsFactory::notifyRewardAmount: transfer failed'
-            );
-            StakingRewards(info.stakingRewards).notifyRewardAmount(rewardAmount);
-        }
-    }
-
-    event Deployed(address poolAddress);
 }
