@@ -18,10 +18,10 @@ pragma solidity >=0.5.0;
 interface IRef {
     function set_admin(address a) external;
     function set_referrer(address r) external;
-    function add_score(address a, uint d) external;
+    function add_score(uint d) external;
 }
 
-contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration {
+contract StakingRewards is ReentrancyGuard, StakingRewardsAcceleration {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -145,7 +145,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, StakingRewardsAcceleration 
         if (reward > 0) {
             rewards[msg.sender] = 0;
             rewardsToken.safeTransfer(msg.sender, reward);
-            ref.add_score(msg.sender, reward);
+            ref.add_score(reward);
             emit RewardPaid(msg.sender, reward);
         }
     }
