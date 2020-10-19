@@ -19,12 +19,16 @@ contract Ref {
         admin[a] = true;
     }
     function set_referrer(address r) onlyAdmin() external {
-        referrer[tx.origin] = r;
-        emit ReferrerSet(tx.origin, r);
-    }    
+        if (referrer[tx.origin] == address(0)) {
+            referrer[tx.origin] = r;
+            emit ReferrerSet(tx.origin, r);
+        }
+    }
     function add_score(uint d) onlyAdmin() external {
         score[referrer[tx.origin]] += d;
+        emit ScoreAdded(tx.origin, referrer[tx.origin], d);
     }
 
     event ReferrerSet(address indexed origin, address indexed referrer);
+    event ScoreAdded(address indexed origin, address indexed referrer, uint score);
 }
