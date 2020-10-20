@@ -31,7 +31,7 @@ contract StakingRewardsFactory is Ownable {
     }
 
     function new_accelerator(address VESTtoken, address pool) onlyOwner() public {
-        address acceleratorCon = address(new StakingRewardsAccelerator(NFTtoken, pool));
+        address acceleratorCon = address(new StakingRewardsAccelerator(VESTtoken, pool));
         IStakingRewards(pool).setAccSetter(acceleratorCon);
     }
 }
