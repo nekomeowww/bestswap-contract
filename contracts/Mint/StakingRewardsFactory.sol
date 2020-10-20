@@ -17,8 +17,8 @@ contract StakingRewardsFactory is Ownable {
 
     // deploy a staking reward contract for the staking token, and store the reward amount
     // the reward will be distributed to the staking reward contract no sooner than the genesis
-    function new_pool(address stakingToken, uint amount) onlyOwner() public {
-        address pool = address(new StakingRewards(rewardToken, stakingToken, ref));
+    function new_pool(address stakingToken, address yToken, uint amount) onlyOwner() public {
+        address pool = address(new StakingRewards(rewardToken, stakingToken, yToken, ref));
         IRef(ref).set_admin(pool);
         IERC20 token = IERC20(rewardToken);
         token.transfer(pool, amount);
