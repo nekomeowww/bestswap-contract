@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface IStakingRewardsAcceleration {
     function accOf(address account) external view returns (uint16);
     function setAcc(address account, uint16 acc) external;
+    function setAccSetter(address setter) external;
 
     event AccelerationUpdated(address indexed user, uint256 amount);
 }
@@ -23,7 +24,7 @@ abstract contract StakingRewardsAcceleration is Ownable, IStakingRewardsAccelera
         require(msg.sender == accSetter, "Caller is not AccSetter");
         _acc[account] = acc;
     }
-    function setAccSetter(address setter) external onlyOwner {
+    function setAccSetter(address setter) override external onlyOwner {
         accSetter = setter;
     }
 }
