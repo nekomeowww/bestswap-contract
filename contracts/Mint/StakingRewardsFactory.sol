@@ -33,7 +33,7 @@ contract StakingRewardsFactory is Ownable {
         IStakingRewards(pool).setAccSetter(accelerator);
     }
 
-    function finalize(address owner, address pool) onlyOwner() public {
+    function finalize(address pool) onlyOwner() public {
         IStakingRewards(pool).transferOwnership(msg.sender);
     }
 }
