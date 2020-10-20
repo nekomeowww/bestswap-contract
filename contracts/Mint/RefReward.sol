@@ -8,7 +8,7 @@ interface IRef {
 contract RefReward {
 
     mapping(address => uint) public claimed;
-    IRef constant public ref = IRef(0); // TODO: add ref address
+    IRef constant public ref = IRef(0x75b82728C5a4f1CbfdC8b27C7DCFfea9bBa3F613); 
 
     function claim() external {
         uint score = ref.scoreOf(msg.sender);
