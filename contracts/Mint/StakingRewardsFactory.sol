@@ -26,13 +26,14 @@ contract StakingRewardsFactory is Ownable {
         IERC20 token = IERC20(rewardToken);
         token.transfer(pool, amount);
         IStakingRewards(pool).notifyRewardAmount(amount);
-        IStakingRewards(pool).transferOwnership(msg.sender);
     }
 
-    function new_accelerator(address VESTtoken, address pool) onlyOwner() public {  
-        IStakingRewards(pool).transferOwnership(address(this));
+    function new_accelerator(address VESTtoken, address pool) onlyOwner() public {
         address accelerator = address(new StakingRewardsAccelerator(VESTtoken, pool));
         IStakingRewards(pool).setAccSetter(accelerator);
+    }
+
+    function finalize(address owner, address pool) onlyOwner() public {
         IStakingRewards(pool).transferOwnership(msg.sender);
     }
 }
