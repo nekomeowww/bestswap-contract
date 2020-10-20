@@ -8,6 +8,7 @@ import "./StakingRewards.sol";
 
 interface IStakingRewards {
     function notifyRewardAmount(uint256 reward) external;
+    function transferOwnership(address newOwner) external;
 }
 
 contract StakingRewardsFactory is Ownable {
@@ -23,5 +24,6 @@ contract StakingRewardsFactory is Ownable {
         IERC20 token = IERC20(rewardToken);
         token.transfer(pool, amount);
         IStakingRewards(pool).notifyRewardAmount(amount);
+        IStakingRewards(pool).transferOwnership(msg.sender);
     }
 }
