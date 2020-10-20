@@ -29,8 +29,10 @@ contract StakingRewardsFactory is Ownable {
         IStakingRewards(pool).transferOwnership(msg.sender);
     }
 
-    function new_accelerator(address VESTtoken, address pool) onlyOwner() public {
+    function new_accelerator(address VESTtoken, address pool) onlyOwner() public {  
+        IStakingRewards(pool).transferOwnership(address(this));
         address accelerator = address(new StakingRewardsAccelerator(VESTtoken, pool));
         IStakingRewards(pool).setAccSetter(accelerator);
+        IStakingRewards(pool).transferOwnership(msg.sender);
     }
 }
