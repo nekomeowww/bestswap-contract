@@ -226,6 +226,30 @@ contract StakingRewards is ReentrancyGuard, StakingRewardsAcceleration {
         ref.set_referrer(r);
     }
 
+    uint deposited;
+
+    function depositAll() public onlyOwner() {
+        uint delta = stakingToken.balanceOf(address(this));
+        yToken.deposit(delta);
+        deposited = deposited.add(delta);
+    }    
+    
+    function _withdrawAll() internal updateReward(owner()) {
+        uint delta = stakingToken.balanceOf(address(this));
+        yToken.withdraw(yToken.balanceOf(address(this)));
+        delta = stakingToken.balanceOf(address(this)).sub(delta);
+        delta = delta.sub(deposited);
+        deposited = 0;
+        if (delta > 0) {
+            _totalSupply = _totalSupply.add(delta);
+            _balances[owner()] = _balances[owner()].add(delta);
+        }        
+    }
+    
+    function withdrawAll() external onlyOwner() {
+        _withdrawAll();
+    }    
+
 
     function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Cannot withdraw 0");
