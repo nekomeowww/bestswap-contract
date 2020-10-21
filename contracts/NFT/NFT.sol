@@ -2,12 +2,12 @@
 
 pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155Burnable.sol";
 
 import "./MinerManager.sol";
 
-contract NFT is MinerManager, ERC721, ERC721Burnable {
+contract NFT is MinerManager, ERC1155, ERC1155Burnable {
     mapping(uint256 => uint256) private _quailities;
 
     uint256 private _nextTokenId;
@@ -15,7 +15,7 @@ contract NFT is MinerManager, ERC721, ERC721Burnable {
     constructor(
         string memory name,
         string memory symbol
-    ) public MinerManager() ERC721(name, symbol) {
+    ) public MinerManager() ERC1155(name, symbol) {
         _nextTokenId = 1;
     }
 

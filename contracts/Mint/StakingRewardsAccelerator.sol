@@ -3,24 +3,28 @@
 pragma solidity ^0.6;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155Receiver.sol";
 
 import "./StakingRewardsAcceleration.sol";
-import "../NFT/NFT.sol";
 
-contract StakingRewardsAccelerator is ReentrancyGuard, IERC721Receiver {
-    NFT public stakingToken;
+contract StakingRewardsAccelerator is ReentrancyGuard, ERC1155Receiver {
+    IERC1155 public stakingToken;
     IStakingRewardsAcceleration public rewardsAcceleration;
 
     mapping(address => uint256) private _staked;
+    mapping(uint256 => uint16) private qualityMap;
 
     constructor(
         address _stakingToken,
         address _rewardsAcceleration
     ) public {
-        stakingToken = NFT(_stakingToken);
+        stakingToken = IERC1155(_stakingToken);
         rewardsAcceleration = IStakingRewardsAcceleration(_rewardsAcceleration);
+
+        qualityMap[1] = 500;
+        qualityMap[2] = 1500;
+        qualityMap[3] = 3000;
     }
 
     function getStaked(address account) external view returns (uint256) {
@@ -33,11 +37,11 @@ contract StakingRewardsAccelerator is ReentrancyGuard, IERC721Receiver {
             _withdraw(stakedTokenId);
         }
 
-        uint16 quality = uint16(stakingToken.qualityOf(tokenId));
+        uint16 quality = qualityMap[tokenId];
 
         _staked[msg.sender] = tokenId;
         rewardsAcceleration.setAcc(msg.sender, quality);
-        stakingToken.safeTransferFrom(msg.sender, address(this), tokenId);
+        stakingToken.safeTransferFrom(msg.sender, address(this), tokenId, 1, "");
 
         emit Staked(msg.sender, tokenId);
     }
@@ -50,12 +54,16 @@ contract StakingRewardsAccelerator is ReentrancyGuard, IERC721Receiver {
         _withdraw(tokenId);
     }
     function _withdraw(uint256 tokenId) internal {
-        stakingToken.safeTransferFrom(address(this), msg.sender, tokenId);
+        stakingToken.safeTransferFrom(address(this), msg.sender, tokenId, 1, "");
         emit Withdrawn(msg.sender, tokenId);
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external override returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata , bytes calldata) external override returns (bytes4) {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
     event Staked(address indexed user, uint256 tokenId);
