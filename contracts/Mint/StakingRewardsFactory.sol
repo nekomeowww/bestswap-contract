@@ -16,8 +16,8 @@ interface IStakingRewards {
 
 contract StakingRewardsFactory is Ownable {
 
-    address constant ref = address(0x75b82728C5a4f1CbfdC8b27C7DCFfea9bBa3F613);
-    address constant rewardToken = address(0x36eb1b02cB7Be3ffA1eE7Bd2A3c7D036002730F7);
+    address constant ref = address(0x06DecBa7A077cB103F47ee136CBA0118A5741861);
+    address constant rewardToken = address(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
 
     function set_pool_duration(address poolAddress, uint256 rewardsDuration) onlyOwner() public {
         IStakingRewards(poolAddress).setDuration(rewardsDuration);

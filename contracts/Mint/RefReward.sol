@@ -15,8 +15,8 @@ contract RefReward {
     using SafeMath for uint;
 
     mapping(address => uint) public claimed;
-    IRef constant public ref = IRef(0x75b82728C5a4f1CbfdC8b27C7DCFfea9bBa3F613);
-    IERC20 constant public token = IERC20(0x36eb1b02cB7Be3ffA1eE7Bd2A3c7D036002730F7);     
+    IRef constant public ref = IRef(0x06DecBa7A077cB103F47ee136CBA0118A5741861);
+    IERC20 constant public token = IERC20(0x10747e2045a0ef884a0586AC81558F43285ea3c7);     
 
     function claim() external {
         uint score = ref.scoreOf(msg.sender);
