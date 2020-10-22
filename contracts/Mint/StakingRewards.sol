@@ -128,7 +128,7 @@ contract StakingRewards is ReentrancyGuard, StakingRewardsAcceleration {
     IRef public ref;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration = 7 days;
+    uint256 public rewardsDuration = 3 days;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 
@@ -279,6 +279,11 @@ contract StakingRewards is ReentrancyGuard, StakingRewardsAcceleration {
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
+
+    function setDuration(uint256 _rewardsDuration) external onlyOwner() {
+        require(block.timestamp >= periodFinish, 'period not finish');
+        rewardsDuration = _rewardsDuration;
+    }
 
     function notifyRewardAmount(uint256 reward) external updateReward(address(0)) {
         if (block.timestamp >= periodFinish) {
